@@ -6,41 +6,12 @@ require_once('functions.php');
 session_start();
 $dbh = connectDb();
 
-if ($_SESSION['id']) {
-  header('Location: index.php');
-  exit;
-}
+$sql = "select * from categories";
+$stmt = $dbh->prepare($sql);
+$stmt->execute();
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  $email = $_POST['email'];
-  $password = $_POST['password'];
+$categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-  $errors = [];
-
-  if ($email == '') {
-    $errors[] = 'メールアドレスが未入力です';
-  }
-
-  if ($password == '') {
-    $errors[] = 'パスワードが未入力です';
-  }
-
-  if (empty($errors)) {
-    $sql = "select * from users where email = :email";
-    $stmt = $dbh->prepare($sql);
-    $stmt->bindParam(":email", $email, PDO::PARAM_STR);
-    $stmt->execute();
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (password_verify($password, $user['password'])) {
-      $_SESSION['id'] = $user['id'];
-      header('Location: index.php');
-      exit;
-    } else {
-      $errors[] = 'メールアドレスかパスワードが間違っています';
-    }
-  }
-  }
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -59,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <div class="flex-col-area">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
       <a href="http://localhost/19_blog_system/index.php" class="navbar-brand">Camp Blog</a>
-      <div class="collapse navbar-collapse" id="navbarToggle">
+      <div class="collapse navbar-collapse" id="navberToggle">
         <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
           <?php if ($_SESSION['id']) : ?>
             <li class="nav-item">
@@ -84,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
         <div class="card card-signin my-5 bg-light">
           <div class="card-body">
-            <h5 class="card-title text-center">ログイン</h5>
+            <h5 class="card-title text-center">新規投稿記事</h5>
             <?php if ($errors) : ?>
               <ul class="alert alert-danger">
                 <?php foreach ($errors as $error) : ?>
@@ -92,29 +63,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <?php endforeach; ?>
               </ul>
             <?php endif; ?>
-            <form action="sign_in.php" method="post">
+            <form action="new.php" method="post">
               <div class="form-group">
-                <label for="email">メールアドレス</label>
-                <input type="email" name="email" id="" class="form-control" autofocus required>
+                <label for="title">タイトル</label>
+                <input type="text" name="title" id="" class="form-control" autofocus required>
+              </div>
+              <div class="from-group">
+                <label for="category_id">カテゴリー</label>
+                <select name="category_id" class=from-control required>
+                  <option value="" disabled selected>選択して下さい</option>
+                  <?php foreach ($categories as $c) :?>
+                    <option value="<?php echo $c['id'] ;?>"><?php echo $c['name'] ;?></option>
+                  <?php endforeach; ?>
+                </select>
               </div>
               <div class="form-group">
-                <label for="password">パスワード</label>
-                <input type="password" name="password" id="" class="form-control"required>
+                <label for="body">本文</label>
+                <textarea name="body" id="" cols="30" rows="10" class="from-control" required></textarea>
               </div>
               <div class="form-group">
-                <input type="submit" value="ログイン" class="btn btn-lg btn-primary btn-block">
+                <input type="submit" value="登録" class="btn btn-lg btn-primary btn-block">
               </div>
-              <a href="sign_up.php" class="btn btn-lg btn-success btn-block mt-2">アカウント登録</a>
             </form>
           </div>
         </div>
       </div>
-    </div>
     </div>
     <footer class="footer font-small bg-dark">
       <div class="footer-copyright text-center py-3 text-light">&copy; 2020 Camp Blog</div>
     </footer>
   </div>
 </body>
-
 </html>
