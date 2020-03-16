@@ -1,6 +1,32 @@
 <?php
 
+require_once('config.php');
+require_once('functions.php');
+
 session_start();
+
+$dbh = connectDb();
+
+$sql = <<<SQL
+select
+  p.*,
+  c.name,
+  u.name as user_name
+from
+  posts p
+left join
+  categories c
+on p.category_id = c.id
+left join
+  users u
+on p.user_id = u.id
+order by
+  p.created_at desc
+SQL;
+
+$stmt = $dbh->prepare($sql);
+$stmt->execute();
+$posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
 ?>
@@ -41,38 +67,22 @@ session_start();
         </ul>
       </div>
     </nav>
-    <!-- <div class="container">
+    <div class="container">
       <div class="row">
-        <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
-          <div class="card card-signin my-5 bg-light">
-            <div class="card-body">
-              <h5 class="card-title text-center">ログイン</h5>
-              <?php if ($errors) : ?>
-                <ul class="alert alert-danger">
-                  <?php foreach ($errors as $error) : ?>
-                    <li><?php echo $error; ?></li>
-                  <?php endforeach; ?>
-                </ul>
-              <?php endif; ?>
-              <form action="new.php" method="post">
-                <div class="form-group">
-                  <label for="email">メールアドレス</label>
-                  <input type="email" name="email" id="" class="form-control" autofocus required>
-                </div>
-                <div class="form-group">
-                  <label for="password">パスワード</label>
-                  <input type="password" name="password" id="" class="form-control"required>
-                </div>
-                <div class="form-group">
-                  <input type="submit" value="ログイン" class="btn btn-lg btn-primary btn-block">
-                </div>
-                <a href="sign_up.php" class="btn btn-lg btn-success btn-block mt-2">アカウント登録</a>
-              </form>
+        <div class="col-sm-11 col-md-10 col-lg-9 mx-auto">
+          <?php foreach ($posts as $post) : ?>
+            <div class="article">
+              <h2>タイトル:<?php echo h($post['title']);?></h2>
+              <p>著者:<?php echo h($post['user_name']);?></p>
+              <p>作成日:<?php echo h($post['created_at']);?></p>
+              <p><?php echo nl2br(h(mb_strimwidth($post['body'], 0, 50, "...")));?></p>
+              <a href="show.php?id=<?php echo h($post['id']);?>" class="btn btn-info">続きを読む</a>
             </div>
-          </div>
+            <hr>
+          <?php endforeach; ?>
         </div>
       </div>
-    </div> -->
+    </div>
     <footer class="footer font-small bg-dark">
       <div class="footer-copyright text-center py-3 text-light">&copy; 2020 Camp Blog</div>
     </footer>
