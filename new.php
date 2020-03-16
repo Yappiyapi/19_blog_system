@@ -12,6 +12,40 @@ $stmt->execute();
 
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+  $title = $_POST['title'];
+  $body = $_POST['body'];
+  $category_id = $_POST['category_id'];
+  $user_id = $_SESSION['id'];
+
+  $errora = [];
+
+  if ($title == '') {
+    $errors = 'タイトルが未入力です';
+  }
+  if ($category_id == '') {
+    $errors = 'カテゴリーが未選択です';
+  }
+  if ($body == '') {
+    $errors = '本文が未入力です';
+  }
+
+  if (empty($errors)) {
+    $sql = "insert into posts" . "(title, body, category_id, user_id, created_at, updated_at) values" .
+    "(:title, :body, :category_id, :user_id, now(), now())";
+    $stmt = $dbh->prepare($sql);
+
+    $stmt->bindParam(':title', $title, PDO::PARAM_STR);
+    $stmt->bindParam(':body', $body, PDO::PARAM_STR);
+    $stmt->bindParam(':category_id', $category_id);
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_STR);
+
+    $stmt->execute();
+
+
+  }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -52,10 +86,10 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </nav>
     <div class="container">
     <div class="row">
-      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+      <div class="col-sm-11 col-md-9 col-lg-7 mx-auto">
         <div class="card card-signin my-5 bg-light">
           <div class="card-body">
-            <h5 class="card-title text-center">新規投稿記事</h5>
+            <h5 class="card-title text-center">新規投稿</h5>
             <?php if ($errors) : ?>
               <ul class="alert alert-danger">
                 <?php foreach ($errors as $error) : ?>
@@ -70,7 +104,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
               </div>
               <div class="from-group">
                 <label for="category_id">カテゴリー</label>
-                <select name="category_id" class=from-control required>
+                <select name="category_id" class=form-control required>
                   <option value="" disabled selected>選択して下さい</option>
                   <?php foreach ($categories as $c) :?>
                     <option value="<?php echo $c['id'] ;?>"><?php echo $c['name'] ;?></option>
@@ -79,7 +113,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
               </div>
               <div class="form-group">
                 <label for="body">本文</label>
-                <textarea name="body" id="" cols="30" rows="10" class="from-control" required></textarea>
+                <textarea name="body" id="" cols="30" rows="10" class="form-control" required></textarea>
               </div>
               <div class="form-group">
                 <input type="submit" value="登録" class="btn btn-lg btn-primary btn-block">
@@ -89,6 +123,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
       </div>
     </div>
+  </div>
     <footer class="footer font-small bg-dark">
       <div class="footer-copyright text-center py-3 text-light">&copy; 2020 Camp Blog</div>
     </footer>
